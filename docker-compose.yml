@@ -12,7 +12,3 @@ services:
       - DURATION=${DURATION}
       - AMOUNT=${AMOUNT}
     command: ["run", "/scripts/test.js"]
-
-volumes:
-  mysql-data:
-  mongodb-data:
