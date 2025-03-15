@@ -1,6 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
+const appHost = __ENV.APP_HOST || 'localhost';
 const port = __ENV.PORT || 3000;
 const vus = Number(__ENV.VUS) || 10;
 const duration = __ENV.DURATION || '10s';
@@ -16,7 +17,7 @@ export default function () {
     const params = { headers: { 'Content-Type': 'application/json' } };
 
     const res = http.post(
-        `http://host.docker.internal:${port}/app/api/rest`,
+        `http://${appHost}:${port}/app/api/rest`,
         payload,
         params
     );
