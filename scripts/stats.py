@@ -7,7 +7,7 @@ JSON_FOLDER= 'results/'
 JSON_FILE = ''
 FILTERS = []
 
-THREAD_MODE = ' (V)'
+THREAD_MODE = ' (M)'
 
 COLORS = ['blue', 'green', 'red', 'purple', 'orange', 'brown', 'pink', 'gray', 'olive', 'cyan']
 
