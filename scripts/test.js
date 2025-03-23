@@ -1,7 +1,8 @@
+import http from 'k6/http';
+import { check, group, sleep } from 'k6';
 import buildTestScenarios from './utils/build-test-scenarios.js';
 import loadBodyDefinitions from './utils/load-body-definitions.js';
-import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { saveSummary } from './utils/save-summary.js';
 
 const scenarios = buildTestScenarios();
 
@@ -14,18 +15,18 @@ export const options = {
 export function exec_pause() { }
 
 export function exec_test() {
-    const payload = JSON.stringify(bodyDefinitions[__ENV.CURRENT_ROUTE]);
-    const params = { headers: { 'Content-Type': 'application/json' } };
-
-    const res = http.post(
-        __ENV.ENDPOINT,
-        payload,
-        params
-    );
-
-    check(res, {
-        'is status 200': (r) => r.status === 200,
-    });
+    group(__ENV.ENDPOINT, () => {
+        const payload = JSON.stringify(bodyDefinitions[__ENV.CURRENT_ROUTE]);
+        const params = { headers: { 'Content-Type': 'application/json' } };
+        
+        const res = http.post(__ENV.ENDPOINT, payload, params, {
+            tags: { endpoint: __ENV.ENDPOINT }
+        });
     
-    sleep(2);
+        check(res, { 'is status 200': (r) => r.status === 200 });
+        
+        sleep(2);
+    });
 }
+
+export const handleSummary = (data) => saveSummary(data);
