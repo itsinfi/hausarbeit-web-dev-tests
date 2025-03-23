@@ -12,9 +12,12 @@ export default function buildTestScenarios() {
         for (let i = 0; i < config.testRoutes.length; i++) {
             const route = String(config.testRoutes[i]);
 
-            scenarios[`${port}_test_${route.replace('/', '')}`] = {
+            const testName = `test_${port}_${route.replace('/', '')}`;
+            const pauseName = `pause_${port}_${route.replace('/', '')}`;
+
+            scenarios[testName] = {
                 executor: 'constant-arrival-rate',
-                exec: 'exec_test',
+                exec: testName,
                 rate: config.testRate,
                 timeUnit: config.timeUnit,
                 duration: config.testDuration,
@@ -24,14 +27,15 @@ export default function buildTestScenarios() {
                 gracefulStop: config.testGracefulStop,
                 tags: { test_phase: route },
                 env: {
-                    ENDPOINT: `${url}${route}`,
                     CURRENT_ROUTE: route.replace('/', ''),
+                    ENDPOINT: `${url}${route}`,
+                    TEST_NAME: testName,
                 },
             };
 
             startTime += timeStringToSeconds(config.testDuration) + timeStringToSeconds(config.testGracefulStop);
 
-            scenarios[`${port}_pause_${i}`] = {
+            scenarios[pauseName] = {
                 executor: 'constant-arrival-rate',
                 exec: 'exec_pause',
                 preAllocatedVus: 0,

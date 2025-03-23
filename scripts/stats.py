@@ -1,9 +1,13 @@
+from datetime import datetime
 import json
 import matplotlib.pyplot as plt
 import os
 
-JSON_FILE = 'results/scenarios-copy.json'
+JSON_FOLDER= 'results/'
+JSON_FILE = ''
 FILTERS = []
+
+THREAD_MODE = ' (V)'
 
 COLORS = ['blue', 'green', 'red', 'purple', 'orange', 'brown', 'pink', 'gray', 'olive', 'cyan']
 
@@ -14,21 +18,107 @@ APPLICATIONS = {
     '3003': 'HttpServlet'
 }
 
-def plot_performance_data(json_file_path, filter_keys=[]):
-    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../plots')
+METRICS = {
+    'iterations': 'Iterationen',
+    'data_received': 'Datengröße (in kB)',
+    'data_sent': 'Datengröße (in kB)',
+    'vus': 'Anzahl',
+    'http_reqs': 'Anzahl',
+    'http_req_duration': 'Zeit (in ms)',
+    'http_req_waiting': 'Zeit (in ms)',
+    'http_req_blocked': 'Zeit (in ms)',
+    'http_req_failed': 'Anzahl',
+    'http_req_tls_handshaking': 'Zeit (in ms)',
+    'http_req_receiving': 'Zeit (in ms)',
+    'http_req_sending': 'Zeit (in ms)',
+    'http_req_connecting': 'Zeit (in ms)',
+    'checks': 'Anteil (in %)',
+}
+
+TITLES = {
+    'iterations': 'Iterationen',
+    'data_received': 'Erhaltene Daten',
+    'data_sent': 'Gesendete Daten',
+    'vus': 'Virtuell simulierte Nutzer',
+    'http_reqs': 'HTTP-Anfragen',
+    'http_req_duration': 'Durchschnittliche Dauer für HTTP-Anfragen',
+    'http_req_waiting': 'Durchschnittliche Wartezeit für HTTP-Anfragen',
+    'http_req_blocked': 'Durchschnittliche Blockierte Zeit für HTTP-Anfragen',
+    'http_req_failed': 'Fehlgeschlagene HTTP-Anfragen',
+    'http_req_tls_handshaking': 'Durchschnittliche TLS-Handshake-Dauer',
+    'http_req_receiving': 'Durchschnittliche Empfangszeit für HTTP-Anfragen',
+    'http_req_sending': 'Durchschnittliche Sendezeit für HTTP-Anfragen',
+    'http_req_connecting': 'Durchschnittliche Verbindungszeit für HTTP-Anfragen',
+    'checks': 'Checks',
+    '01': '(single-threaded)',
+    '01|multi': f'(multi-threaded{THREAD_MODE})',
+    '02': '(single-threaded)',
+    '02|multi': f'(multi-threaded{THREAD_MODE})',
+    '03': '(single-threaded)',
+    '03|multi': f'(multi-threaded{THREAD_MODE})',
+    '04': '(single-threaded)',
+    '04|multi': f'(multi-threaded{THREAD_MODE})',
+    '05': '(single-threaded)',
+    '05|multi': f'(multi-threaded{THREAD_MODE})',
+    '06': '(single-threaded)',
+    '06|multi': f'(multi-threaded{THREAD_MODE})',
+    '07': '(single-threaded)',
+    '07|multi': f'(multi-threaded{THREAD_MODE})',
+    '08': '(single-threaded)',
+    '08|multi': f'(multi-threaded{THREAD_MODE})',
+    '09': '(single-threaded)',
+    '09|multi': f'(multi-threaded{THREAD_MODE})',
+    '10': '(single-threaded)',
+    '10|multi': f'(multi-threaded{THREAD_MODE})',
+    '11': '(single-threaded)',
+    '11|multi': f'(multi-threaded{THREAD_MODE})',
+    '12': '(single-threaded)',
+    '12|multi': f'(multi-threaded{THREAD_MODE})',
+    '13': '(single-threaded)',
+    '13|multi': f'(multi-threaded{THREAD_MODE})',
+    '14': '(single-threaded)',
+    '14|multi': f'(multi-threaded{THREAD_MODE})',
+}
+
+def read_newest_json_file():
+    files = [f for f in os.listdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../results'))]
+    
+    newest_file = None
+    newest_time = None
+
+    for file in files:
+        try:
+            timestamp_str = file.split('.')[0]
+            file_time = datetime.strptime(timestamp_str, '%Y-%m-%dT%H-%M-%S')
+
+            if newest_file is None or file_time > newest_time:
+                newest_time = file_time
+                newest_file = file
+            
+        except ValueError:
+            print(f'{file} wird übersprungen...')
+
+    return newest_file
+
+def plot_performance_data():
+    global JSON_FOLDER, JSON_FILE, FILTERS
+    if not JSON_FILE:
+        JSON_FILE = read_newest_json_file()
+
+    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'../plots/{JSON_FILE.split('.')[0]}/')
     
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    with open(json_file_path, 'r') as f:
+    with open(f'{JSON_FOLDER}{JSON_FILE}', 'r') as f:
         data = json.load(f)
 
     processed_data = {}
-    for key, value in data.items():
-        app_name, _, benchmark_name = key.partition('/')
+    for element in data['root_group']['groups']:
+        _, app_name, benchmark_name = element['name'].replace('_multi', '|multi').split('_')
         if app_name not in processed_data:
             processed_data[app_name] = {}
-        processed_data[app_name][benchmark_name] = value
+        processed_data[app_name][benchmark_name] = element['metrics']
     
     all_benchmark_names = set()
     for app_data in processed_data.values():
@@ -45,13 +135,13 @@ def plot_performance_data(json_file_path, filter_keys=[]):
             all_stats.update(app_benchmark_data.keys())
 
         for stat_name in all_stats:
-            if filter_keys and stat_name not in filter_keys:
+            if FILTERS and stat_name not in FILTERS:
                 continue
 
             plt.figure(figsize=(12, 6))
-            plt.title(f'{stat_name} für Benchmark {benchmark_name}')
+            plt.title(f'{TITLES[stat_name]} für {TITLES[benchmark_name]}')
             plt.xlabel('Applikation')
-            plt.ylabel(stat_name)
+            plt.ylabel(METRICS[stat_name])
 
             app_names = list(benchmark_data.keys())
             x_labels = []
@@ -92,14 +182,13 @@ def plot_performance_data(json_file_path, filter_keys=[]):
                     continue
 
             plt.bar(x_labels, y_values, color=colors)
-            plt.legend([x for x in APPLICATIONS.values()])
 
             filename = f'{benchmark_name}_{stat_name}.png'
-            filename = filename.replace('/', '_').replace('{', '_').replace('}', '_').replace(':true', '')
+            filename = filename.replace('/', '_').replace('|', '_').replace('{', '_').replace('}', '_').replace(':true', '')
             filepath = os.path.join(output_dir, filename)
 
             plt.savefig(filepath)
             plt.close()
             print(f'plot in {output_dir} gespeichert')
 
-plot_performance_data(json_file_path=JSON_FILE, filter_keys=FILTERS)
+plot_performance_data()

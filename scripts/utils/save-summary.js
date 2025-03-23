@@ -1,25 +1,23 @@
-export function saveSummary(data) {
-    let scenarioStats = {};
+const space = 2;
+const replacer = null;
 
-    for (const [metricName, metricData] of Object.entries(data.metrics)) {
-        
-        for (const scenarioInfo of Object.values(data.root_group.groups)) {
-            const scenarioKey = scenarioInfo.checks[0].path.split('::')[1].split(':')[2];
+export function saveSummary(data, groupMetrics) {
+    data.root_group.groups.forEach(group => {
+        const metrics = {};
 
-            if (!scenarioStats[scenarioKey]) {
-                scenarioStats[scenarioKey] = {};
+        Object.keys(groupMetrics[group.name]).forEach(metricKey => {
+            const groupSpecificMetricKey = `${metricKey}_${group.name}`;
+
+            if (data.metrics[groupSpecificMetricKey]) {
+                metrics[metricKey] = data.metrics[groupSpecificMetricKey];
             }
 
-            if (!scenarioStats[scenarioKey][metricName]) {
-                scenarioStats[scenarioKey][metricName] = {};
-            }
+            group.metrics = metrics;
+        });
+    });
 
-            scenarioStats[scenarioKey][metricName].push(metricData);
-        }
-    }
-
-    return {
-        "/results/scenarios.json": JSON.stringify(scenarioStats, null, 2),
-        "/results/summary.json": JSON.stringify(data, null, 2),
-    };
+    let result = {};
+    const filename = `/results/${new Date().toISOString().split('.')[0].replace(':', '-').replace(':', '-')}.json`;
+    result[filename] = JSON.stringify(data, replacer, space);
+    return result;
 }
