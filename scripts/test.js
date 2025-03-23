@@ -44,8 +44,8 @@ export function exec_test() {
     const res = http.post(__ENV.ENDPOINT, payload, params);
 
     groupMetrics[__ENV.TEST_NAME].iterations.add(1);
-    groupMetrics[__ENV.TEST_NAME].data_received.add(res.body.length);
-    groupMetrics[__ENV.TEST_NAME].data_sent.add(res.request.body ? res.request.body.length : 0);
+    groupMetrics[__ENV.TEST_NAME].data_received.add((res.body.length / 1024).toFixed(2));
+    groupMetrics[__ENV.TEST_NAME].data_sent.add(res.request.body ? (res.request.body.length / 1024).toFixed(2) : 0);
     groupMetrics[__ENV.TEST_NAME].http_reqs.add(1);
     groupMetrics[__ENV.TEST_NAME].http_req_duration.add(res.timings.duration);
     groupMetrics[__ENV.TEST_NAME].http_req_waiting.add(res.timings.waiting);
