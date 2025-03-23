@@ -5,12 +5,12 @@ export default function secondsToTimeString(num) {
     let minutes = 0;
     let seconds = 0;
 
-    while (num > 60 * 60) {
+    while (num >= 60 * 60) {
         hours++;
         num -= 60 * 60;
     }
 
-    while (num > 60) {
+    while (num >= 60) {
         minutes++;
         num -= 60;
     }
@@ -21,7 +21,7 @@ export default function secondsToTimeString(num) {
     
     result += hours > 0 ? `${hours}h` : '';
     result += minutes > 0 ? `${minutes}m` : '';
-    result += seconds > 0 ? `${seconds}s` : '';
+    result += seconds >= 0 ? `${seconds}s` : '';
 
-    return result;
+    return String(result);
 }

@@ -1,25 +1,31 @@
+import buildTestScenarios from './utils/build-test-scenarios.js';
+import loadBodyDefinitions from './utils/load-body-definitions.js';
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import buildTestScenarios from './utils/build-test-scenarios.js';
 
-export const options = buildTestScenarios();
+const scenarios = buildTestScenarios();
 
-export default function () {
-    // const payload = JSON.stringify({ password: 'Ahadhsoaihsdpoahs oh' });
-    // const params = { headers: { 'Content-Type': 'application/json' } };
+const bodyDefinitions = loadBodyDefinitions();
 
-    // const res = http.post(
-    //     `http://${appHost}:${port}/api/14`,
-    //     payload,
-    //     params
-    // );
-
-    // check(res, {
-    //     'is status 200': (r) => r.status === 200,
-    // });
-    
-    // sleep(1);
+export const options = {
+    scenarios
 }
 
+export function exec_pause() { }
 
+export function exec_test() {
+    const payload = JSON.stringify(bodyDefinitions[__ENV.CURRENT_ROUTE]);
+    const params = { headers: { 'Content-Type': 'application/json' } };
 
+    const res = http.post(
+        __ENV.ENDPOINT,
+        payload,
+        params
+    );
+
+    check(res, {
+        'is status 200': (r) => r.status === 200,
+    });
+    
+    sleep(2);
+}
