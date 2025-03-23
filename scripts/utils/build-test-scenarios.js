@@ -13,10 +13,13 @@ export default function buildTestScenarios() {
             const route = String(config.testRoutes[i]);
 
             scenarios[`${port}_test_${route.replace('/', '')}`] = {
-                executor: config.testExecutor,
+                executor: 'constant-arrival-rate',
                 exec: 'exec_test',
-                vus: config.testVus,
+                rate: config.testRate,
+                timeUnit: config.timeUnit,
                 duration: config.testDuration,
+                preAllocatedVus: config.testPreAllocatedVus,
+                maxVUs: config.testMaxVus,
                 startTime: secondsToTimeString(startTime),
                 gracefulStop: config.testGracefulStop,
                 tags: { test_phase: route },
