@@ -26,6 +26,7 @@ groups.forEach(groupName => {
         http_req_receiving: new Trend(`http_req_receiving_${groupName}`),
         http_req_sending: new Trend(`http_req_sending_${groupName}`),
         http_req_connecting: new Trend(`http_req_connecting_${groupName}`),
+        processing_time: new Trend(`processing_time_${groupName}`),
         vus: new Gauge(`vus_${groupName}`),
         checks: new Rate(`checks_${groupName}`),
     };
@@ -57,6 +58,9 @@ export function exec_test() {
     groupMetrics[__ENV.TEST_NAME].http_req_connecting.add(res.timings.connecting);
     groupMetrics[__ENV.TEST_NAME].vus.add(__VU);
     groupMetrics[__ENV.TEST_NAME].checks.add(check(res, { 'is status 200': (r) => r.status === 200 }));
+    groupMetrics[__ENV.TEST_NAME].processing_time.add(res.headers['Processing-Time'] ?? 0);
+    
+    console.log('headers:', res.headers);
 }
 
 export const handleSummary = (data) => saveSummary(data, groupMetrics);

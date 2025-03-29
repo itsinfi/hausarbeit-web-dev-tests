@@ -33,6 +33,7 @@ METRICS = {
     'http_req_sending': 'Zeit (in ms)',
     'http_req_connecting': 'Zeit (in ms)',
     'checks': 'Anteil (in %)',
+    'processing_time': 'Verarbeitungszeit (in ms)',
 }
 
 TITLES = {
@@ -50,34 +51,35 @@ TITLES = {
     'http_req_sending': 'Durchschnittliche Sendezeit für HTTP-Anfragen',
     'http_req_connecting': 'Durchschnittliche Verbindungszeit für HTTP-Anfragen',
     'checks': 'Checks',
-    '01': '(single-threaded)',
-    '01|multi': f'(multi-threaded{THREAD_MODE})',
-    '02': '(single-threaded)',
-    '02|multi': f'(multi-threaded{THREAD_MODE})',
-    '03': '(single-threaded)',
-    '03|multi': f'(multi-threaded{THREAD_MODE})',
-    '04': '(single-threaded)',
-    '04|multi': f'(multi-threaded{THREAD_MODE})',
-    '05': '(single-threaded)',
-    '05|multi': f'(multi-threaded{THREAD_MODE})',
-    '06': '(single-threaded)',
-    '06|multi': f'(multi-threaded{THREAD_MODE})',
-    '07': '(single-threaded)',
-    '07|multi': f'(multi-threaded{THREAD_MODE})',
-    '08': '(single-threaded)',
-    '08|multi': f'(multi-threaded{THREAD_MODE})',
-    '09': '(single-threaded)',
-    '09|multi': f'(multi-threaded{THREAD_MODE})',
-    '10': '(single-threaded)',
-    '10|multi': f'(multi-threaded{THREAD_MODE})',
-    '11': '(single-threaded)',
-    '11|multi': f'(multi-threaded{THREAD_MODE})',
-    '12': '(single-threaded)',
-    '12|multi': f'(multi-threaded{THREAD_MODE})',
-    '13': '(single-threaded)',
-    '13|multi': f'(multi-threaded{THREAD_MODE})',
-    '14': '(single-threaded)',
-    '14|multi': f'(multi-threaded{THREAD_MODE})',
+    'processing_time': 'Durchschnittliche Verarbeitungszeit',
+    '01': '01 (single-threaded)',
+    '01|multi': f'01 (multi-threaded{THREAD_MODE})',
+    '02': '02 (single-threaded)',
+    '02|multi': f'02 (multi-threaded{THREAD_MODE})',
+    '03': '03 (single-threaded)',
+    '03|multi': f'03 (multi-threaded{THREAD_MODE})',
+    '04': '04 (single-threaded)',
+    '04|multi': f'04 (multi-threaded{THREAD_MODE})',
+    '05': '05 (single-threaded)',
+    '05|multi': f'05 (multi-threaded{THREAD_MODE})',
+    '06': '06 (single-threaded)',
+    '06|multi': f'06 (multi-threaded{THREAD_MODE})',
+    '07': '07 (single-threaded)',
+    '07|multi': f'07 (multi-threaded{THREAD_MODE})',
+    '08': '08 (single-threaded)',
+    '08|multi': f'08 (multi-threaded{THREAD_MODE})',
+    '09': '09 (single-threaded)',
+    '09|multi': f'09 (multi-threaded{THREAD_MODE})',
+    '10': '10 (single-threaded)',
+    '10|multi': f'10 (multi-threaded{THREAD_MODE})',
+    '11': '11 (single-threaded)',
+    '11|multi': f'11 (multi-threaded{THREAD_MODE})',
+    '12': '12 (single-threaded)',
+    '12|multi': f'12 (multi-threaded{THREAD_MODE})',
+    '13': '13 (single-threaded)',
+    '13|multi': f'13 (multi-threaded{THREAD_MODE})',
+    '14': '14 (single-threaded)',
+    '14|multi': f'14 (multi-threaded{THREAD_MODE})',
 }
 
 def read_newest_json_file():
@@ -104,8 +106,10 @@ def plot_performance_data():
     global JSON_FOLDER, JSON_FILE, FILTERS
     if not JSON_FILE:
         JSON_FILE = read_newest_json_file()
+    
+    print(JSON_FILE)
 
-    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'../plots/{JSON_FILE.split('.')[0]}/')
+    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"../plots/{JSON_FILE.split('.')[0]}/")
     
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -174,7 +178,7 @@ def plot_performance_data():
                             colors.append(COLORS[i % len(COLORS)])
 
                         case _:
-                            print(f'unbekannter statistik-typ gefunden: {stat_data['type']} für {stat_name} in {app_name}|{benchmark_name}')
+                            print(f"unbekannter statistik-typ gefunden: {stat_data['type']} für {stat_name} in {app_name}|{benchmark_name}")
 
                 if not x_labels:
                     print(f'keine werte zum plotten von {stat_name} für {app_name}|{benchmark_name} gefunden')

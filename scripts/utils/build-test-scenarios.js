@@ -19,7 +19,7 @@ export default function buildTestScenarios() {
                 executor: 'constant-arrival-rate',
                 exec: testName,
                 rate: config.testRate,
-                timeUnit: config.timeUnit,
+                timeUnit: config.testTimeUnit,
                 duration: config.testDuration,
                 preAllocatedVus: config.testPreAllocatedVus,
                 maxVUs: config.testMaxVus,
