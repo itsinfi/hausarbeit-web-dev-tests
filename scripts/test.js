@@ -59,8 +59,6 @@ export function exec_test() {
     groupMetrics[__ENV.TEST_NAME].vus.add(__VU);
     groupMetrics[__ENV.TEST_NAME].checks.add(check(res, { 'is status 200': (r) => r.status === 200 }));
     groupMetrics[__ENV.TEST_NAME].processing_time.add(res.headers['Processing-Time'] ?? 0);
-    
-    console.log('headers:', res.headers);
 }
 
 export const handleSummary = (data) => saveSummary(data, groupMetrics);
