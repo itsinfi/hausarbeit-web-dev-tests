@@ -14,12 +14,12 @@ const groups = Object.keys(scenarios);
 
 groups.forEach(groupKey => {
     const groupName = scenarios[groupKey]?.exec ?? '';
-    
+
     if (!groupMetrics[groupName]) {
         groupMetrics[groupName] = {
             iterations: new Counter(`iterations_${groupName}`),
-            data_received: new Counter(`data_received_${groupName}`),
-            data_sent: new Counter(`data_sent_${groupName}`),
+            // data_received: new Counter(`data_received_${groupName}`),
+            // data_sent: new Counter(`data_sent_${groupName}`),
             http_reqs: new Counter(`http_reqs_${groupName}`),
             http_req_duration: new Trend(`http_req_duration_${groupName}`),
             http_req_waiting: new Trend(`http_req_waiting_${groupName}`),
@@ -32,11 +32,14 @@ groups.forEach(groupKey => {
             processing_time: new Trend(`processing_time_${groupName}`),
             vus: new Gauge(`vus_${groupName}`),
             checks: new Rate(`checks_${groupName}`),
+            total_duration: new Counter(`total_duration_${groupName}`),
         };
     }
 });
 
 export const options = {
+    maxRedirects: 0,
+    discardResponseBodies: true,
     scenarios
 }
 
@@ -49,8 +52,8 @@ export function exec_test() {
     const res = http.post(__ENV.ENDPOINT, payload, params);
 
     groupMetrics[__ENV.TEST_NAME].iterations.add(1);
-    groupMetrics[__ENV.TEST_NAME].data_received.add((res.body.length / 1024).toFixed(2));
-    groupMetrics[__ENV.TEST_NAME].data_sent.add(res.request.body ? (res.request.body.length / 1024).toFixed(2) : 0);
+    // groupMetrics[__ENV.TEST_NAME].data_received.add((res.body.length / 1024).toFixed(2));
+    // groupMetrics[__ENV.TEST_NAME].data_sent.add(res.request.body ? (res.request.body.length / 1024).toFixed(2) : 0);
     groupMetrics[__ENV.TEST_NAME].http_reqs.add(1);
     groupMetrics[__ENV.TEST_NAME].http_req_duration.add(res.timings.duration);
     groupMetrics[__ENV.TEST_NAME].http_req_waiting.add(res.timings.waiting);
@@ -63,6 +66,7 @@ export function exec_test() {
     groupMetrics[__ENV.TEST_NAME].vus.add(__VU);
     groupMetrics[__ENV.TEST_NAME].checks.add(check(res, { 'is status 200': (r) => r.status === 200 }));
     groupMetrics[__ENV.TEST_NAME].processing_time.add(res.headers['Processing-Time'] ?? 0);
+    groupMetrics[__ENV.TEST_NAME].total_duration.add(res.timings.duration);
 }
 
 export const handleSummary = (data) => saveSummary(data, groupMetrics);
