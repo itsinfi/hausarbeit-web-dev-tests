@@ -13,11 +13,8 @@ services:
       - APP_PORTS=${APP_PORTS}
       - APP_ROUTE_PREFIX=${APP_ROUTE_PREFIX}
       - TEST_ROUTES=${TEST_ROUTES}
-      - TEST_RATE=${TEST_RATE}
-      - TEST_TIME_UNIT=${TEST_TIME_UNIT}
-      - TEST_DURATION=${TEST_DURATION}
-      - TEST_PRE_ALLOCATED_VUS=${TEST_PRE_ALLOCATED_VUS}
-      - TEST_MAX_VUS=${TEST_MAX_VUS}
+      - TEST_ITERATIONS=${TEST_ITERATIONS}
+      - TEST_VUS=${TEST_VUS}
       - TEST_GRACEFUL_STOP=${TEST_GRACEFUL_STOP}
       - PAUSE_DURATION=${PAUSE_DURATION}
     command: ["run", "--summary-export=/results/summary.json", "/scripts/test.js"]

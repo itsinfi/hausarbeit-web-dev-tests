@@ -12,24 +12,28 @@ const bodyDefinitions = loadBodyDefinitions();
 const groupMetrics = {};
 const groups = Object.keys(scenarios);
 
-groups.forEach(groupName => {
-    groupMetrics[groupName] = {
-        iterations: new Counter(`iterations_${groupName}`),
-        data_received: new Counter(`data_received_${groupName}`),
-        data_sent: new Counter(`data_sent_${groupName}`),
-        http_reqs: new Counter(`http_reqs_${groupName}`),
-        http_req_duration: new Trend(`http_req_duration_${groupName}`),
-        http_req_waiting: new Trend(`http_req_waiting_${groupName}`),
-        http_req_blocked: new Trend(`http_req_blocked_${groupName}`),
-        http_req_failed: new Rate(`http_req_failed_${groupName}`),
-        http_req_tls_handshaking: new Trend(`http_req_tls_handshaking_${groupName}`),
-        http_req_receiving: new Trend(`http_req_receiving_${groupName}`),
-        http_req_sending: new Trend(`http_req_sending_${groupName}`),
-        http_req_connecting: new Trend(`http_req_connecting_${groupName}`),
-        processing_time: new Trend(`processing_time_${groupName}`),
-        vus: new Gauge(`vus_${groupName}`),
-        checks: new Rate(`checks_${groupName}`),
-    };
+groups.forEach(groupKey => {
+    const groupName = scenarios[groupKey]?.exec ?? '';
+    
+    if (!groupMetrics[groupName]) {
+        groupMetrics[groupName] = {
+            iterations: new Counter(`iterations_${groupName}`),
+            data_received: new Counter(`data_received_${groupName}`),
+            data_sent: new Counter(`data_sent_${groupName}`),
+            http_reqs: new Counter(`http_reqs_${groupName}`),
+            http_req_duration: new Trend(`http_req_duration_${groupName}`),
+            http_req_waiting: new Trend(`http_req_waiting_${groupName}`),
+            http_req_blocked: new Trend(`http_req_blocked_${groupName}`),
+            http_req_failed: new Rate(`http_req_failed_${groupName}`),
+            http_req_tls_handshaking: new Trend(`http_req_tls_handshaking_${groupName}`),
+            http_req_receiving: new Trend(`http_req_receiving_${groupName}`),
+            http_req_sending: new Trend(`http_req_sending_${groupName}`),
+            http_req_connecting: new Trend(`http_req_connecting_${groupName}`),
+            processing_time: new Trend(`processing_time_${groupName}`),
+            vus: new Gauge(`vus_${groupName}`),
+            checks: new Rate(`checks_${groupName}`),
+        };
+    }
 });
 
 export const options = {

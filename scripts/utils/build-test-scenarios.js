@@ -6,47 +6,65 @@ export default function buildTestScenarios() {
     const scenarios = {};
     let startTime = 0;
 
-    for (const port of config.appPorts) {
-        const url = `${config.appProtocol}://${config.appHost}:${port}${config.appRoutePrefix}`;
+    for (const route of config.testRoutes) {
+        const cleanRoute = String(route).replace('/', '');
 
-        for (let i = 0; i < config.testRoutes.length; i++) {
-            const route = String(config.testRoutes[i]);
+        for (const port of config.appPorts) {
+            const baseUrl = `${config.appProtocol}://${config.appHost}:${port}${config.appRoutePrefix}`;
 
-            const testName = `test_${port}_${route.replace('/', '')}`;
-            const pauseName = `pause_${port}_${route.replace('/', '')}`;
+            for (const iterations of config.testIterations) {
 
-            scenarios[testName] = {
-                executor: 'constant-arrival-rate',
-                exec: testName,
-                rate: config.testRate,
-                timeUnit: config.testTimeUnit,
-                duration: config.testDuration,
-                preAllocatedVus: config.testPreAllocatedVus,
-                maxVUs: config.testMaxVus,
-                startTime: secondsToTimeString(startTime),
-                gracefulStop: config.testGracefulStop,
-                tags: { test_phase: route },
-                env: {
-                    CURRENT_ROUTE: route.replace('/', ''),
-                    ENDPOINT: `${url}${route}`,
-                    TEST_NAME: testName,
-                },
-            };
+                for (const vus of config.testVus) {
+                    if (iterations < vus) continue;
 
-            startTime += timeStringToSeconds(config.testDuration) + timeStringToSeconds(config.testGracefulStop);
+                    const scenarioId = `${cleanRoute}_${port}_${iterations}i_${vus}`;
+                    
+                    const testName = `test_${port}_${cleanRoute}`;
+                    const pauseName = `pause_${port}_${cleanRoute}`;
 
-            scenarios[pauseName] = {
-                executor: 'constant-arrival-rate',
-                exec: 'exec_pause',
-                preAllocatedVus: 0,
-                rate: 1,
-                timeUnit: '1s',
-                duration: config.pauseDuration,
-                startTime: secondsToTimeString(startTime),
-                tags: { test_phase: `pause_after_${route}` },
-            };
+                    // Test-Szenario:
+                    scenarios[`test_${scenarioId}`] = {
+                        executor: 'shared-iterations',
+                        exec: testName,
+                        iterations,
+                        vus,
+                        startTime: secondsToTimeString(startTime),
+                        gracefulStop: config.testGracefulStop,
+                        tags: {
+                            test_phase: cleanRoute,
+                            port: String(port),
+                            iterations: String(iterations),
+                            vus: String(vus),
+                        },
+                        env: {
+                            CURRENT_ROUTE: cleanRoute,
+                            ENDPOINT: `${baseUrl}${route}`,
+                            TEST_NAME: testName,
+                        }
+                    }
 
-            startTime += timeStringToSeconds(config.pauseDuration);
+                    startTime += timeStringToSeconds(config.testGracefulStop);
+
+                    // Pause:
+                    scenarios[`pause_${scenarioId}`] = {
+                        executor: 'constant-arrival-rate',
+                        exec: 'exec_pause',
+                        rate: 1,
+                        timeUnit: '1s',
+                        duration: config.pauseDuration,
+                        preAllocatedVus: 0,
+                        maxVUs: 1,
+                        startTime: secondsToTimeString(startTime),
+                        tags: {
+                            test_phase: pauseName,
+                            port: String(port),
+                        },
+                    };
+
+                    startTime += timeStringToSeconds(config.pauseDuration);
+                }
+
+            }
         }
     }
 
