@@ -17,7 +17,7 @@ export default function buildTestScenarios() {
                 for (const vus of config.testVus) {
                     if (iterations < vus) continue;
 
-                    const scenarioId = `${cleanRoute}_${port}_${iterations}i_${vus}`;
+                    const scenarioId = `${cleanRoute}_${port}_${iterations}i_${vus}v`;
                     
                     const testName = `test_${port}_${cleanRoute}`;
                     const pauseName = `pause_${port}_${cleanRoute}`;
