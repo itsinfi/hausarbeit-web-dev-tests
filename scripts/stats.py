@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 import os
 
 JSON_FOLDER= 'results/'
-JSON_FILE = ''
+JSON_FILE = 'final.json'
 FILTERS = []
 
 THREAD_MODE = ' (M)'
 
-COLORS = ['blue', 'green', 'red', 'purple', 'orange', 'brown', 'pink', 'gray', 'olive', 'cyan']
+COLORS = ["#F8DF54", "#70B851", "#546CF8", "#F85454"]
 
 APPLICATIONS = {
     '3000': 'Express.js',
@@ -33,7 +33,8 @@ METRICS = {
     'http_req_sending': 'Zeit (in ms)',
     'http_req_connecting': 'Zeit (in ms)',
     'checks': 'Anteil (in %)',
-    'processing_time': 'Verarbeitungszeit (in ms)',
+    'processing_time': 'Zeit (in ms)',
+    'total_duration': 'Zeit (in ms)',
 }
 
 TITLES = {
@@ -52,6 +53,7 @@ TITLES = {
     'http_req_connecting': 'Durchschnittliche Verbindungszeit für HTTP-Anfragen',
     'checks': 'Checks',
     'processing_time': 'Durchschnittliche Verarbeitungszeit',
+    'total_duration': 'Gesamtdauer des Tests',
     '01': '01 (single-threaded)',
     '01|multi': f'01 (multi-threaded{THREAD_MODE})',
     '02': '02 (single-threaded)',
@@ -127,8 +129,13 @@ def plot_performance_data():
     all_benchmark_names = set()
     for app_data in processed_data.values():
         all_benchmark_names.update(app_data.keys())
+
+    total_values = {}
+    total_value_types = {}
     
     for benchmark_name in all_benchmark_names:
+        is_multi = benchmark_name.endswith('|multi')
+
         benchmark_data = {}
         for app_name, app_data in processed_data.items():
             if benchmark_name in app_data:
@@ -142,39 +149,60 @@ def plot_performance_data():
             if FILTERS and stat_name not in FILTERS:
                 continue
 
-            plt.figure(figsize=(12, 6))
-            plt.title(f'{TITLES[stat_name]} für {TITLES[benchmark_name]}')
+            fig, ax = plt.subplots(figsize=(5, 6))
+            # plt.title(f'{TITLES[stat_name]} für {TITLES[benchmark_name]}')
             plt.xlabel('Applikation')
             plt.ylabel(METRICS[stat_name])
+            # plt.tight_layout()
+            plt.grid(axis='y', linestyle='--', alpha=0.3, color='black')
 
             app_names = list(benchmark_data.keys())
             x_labels = []
             y_values = []
             colors = []
 
+            total_key = f'V2_{stat_name}' if is_multi else f'V1_{stat_name}'
+
+            if not total_key in total_values:
+                total_values[total_key] = {}
+            
+            if not total_key in total_value_types:
+                total_value_types[total_key] = ''
+
             for i, app_name in enumerate(app_names):
                 if stat_name in benchmark_data[app_name]:
                     stat_data = benchmark_data[app_name][stat_name]
+                    
+                    if not app_name in total_values[total_key]:
+                        total_values[total_key][app_name] = 0
 
                     match stat_data['type']:
                         case 'trend':
                             x_labels.append(APPLICATIONS[app_name])
                             y_values.append(stat_data['values']['avg'])
+                            total_value_types[total_key] = stat_data['type']
+                            total_values[total_key][app_name] += stat_data['values']['avg']
                             colors.append(COLORS[i % len(COLORS)])
 
                         case 'counter':
                             x_labels.append(APPLICATIONS[app_name])
                             y_values.append(stat_data['values']['count'])
+                            total_value_types[total_key] = stat_data['type']
+                            total_values[total_key][app_name] += stat_data['values']['count']
                             colors.append(COLORS[i % len(COLORS)])
                         
                         case 'rate':
                             x_labels.append(APPLICATIONS[app_name])
-                            y_values.append(stat_data['values']['rate'])
+                            y_values.append((stat_data['values']['rate'] * 100))
+                            total_value_types[total_key] = stat_data['type']
+                            total_values[total_key][app_name] += stat_data['values']['rate'] * 100
                             colors.append(COLORS[i % len(COLORS)])
                         
                         case 'gauge':
                             x_labels.append(APPLICATIONS[app_name])
                             y_values.append(stat_data['values']['value'])
+                            total_value_types[total_key] = stat_data['type']
+                            total_values[total_key][app_name] += stat_data['values']['value']
                             colors.append(COLORS[i % len(COLORS)])
 
                         case _:
@@ -194,5 +222,57 @@ def plot_performance_data():
             plt.savefig(filepath)
             plt.close()
             print(f'plot in {output_dir} gespeichert')
+
+    for stat_name, stat_data in total_values.items():
+        if (stat_name.startswith('V1_')):
+            stat_key = stat_name.replace('V1_', '')
+            is_multi = False
+
+        elif (stat_name.startswith('V2_')):
+            stat_key = stat_name.replace('V2_', '')
+            is_multi = True
+
+        else: 
+            continue
+
+        if FILTERS and stat_key not in FILTERS:
+            continue
+
+        fig, ax = plt.subplots(figsize=(5, 6))
+        # plt.title(f'{TITLES[stat_name]}')
+        plt.xlabel('Applikation')
+        plt.ylabel(METRICS[stat_key])
+        # plt.tight_layout()
+        plt.grid(axis='y', linestyle='--', alpha=0.3, color='black')
+
+        app_names = list(stat_data.keys())
+        x_labels = []
+        y_values = []
+        colors = []
+
+        for i, (app_name, app_stat) in enumerate(stat_data.items()):
+            x_labels.append(APPLICATIONS[app_name])
+            if total_value_types[stat_name] == 'counter':
+                y_values.append(app_stat)
+            else:    
+                y_values.append(app_stat / len([key for key in total_values.keys() if key.startswith('V2_' if is_multi else 'V1_')]))
+            colors.append(COLORS[i % len(COLORS)])
+
+        if not x_labels:
+                print(f'keine werte zum plotten von {stat_name} für {app_name}|{benchmark_name} gefunden')
+                plt.close()
+                continue
+            
+        plt.bar(x_labels, y_values, color=colors)
+
+        filename = f'total_{stat_name}.png'
+        filename = filename.replace('/', '_').replace('|', '_').replace('{', '_').replace('}', '_').replace(':true', '')
+        filepath = os.path.join(output_dir, filename)
+
+        plt.savefig(filepath)
+        plt.close()
+        print(f'plot in {output_dir} gespeichert')
+
+
 
 plot_performance_data()
