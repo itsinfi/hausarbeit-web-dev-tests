@@ -149,7 +149,7 @@ def plot_performance_data():
             if FILTERS and stat_name not in FILTERS:
                 continue
 
-            fig, ax = plt.subplots(figsize=(5, 6))
+            fig, ax = plt.subplots(figsize=(4, 2))
             # plt.title(f'{TITLES[stat_name]} für {TITLES[benchmark_name]}')
             plt.xlabel('Applikation')
             plt.ylabel(METRICS[stat_name])
@@ -238,7 +238,7 @@ def plot_performance_data():
         if FILTERS and stat_key not in FILTERS:
             continue
 
-        fig, ax = plt.subplots(figsize=(5, 6))
+        fig, ax = plt.subplots(figsize=(4, 2))
         # plt.title(f'{TITLES[stat_name]}')
         plt.xlabel('Applikation')
         plt.ylabel(METRICS[stat_key])
